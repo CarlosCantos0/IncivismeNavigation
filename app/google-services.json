@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "734989704843",
+    "project_id": "incivismenavigation-83c85",
+    "storage_bucket": "incivismenavigation-83c85.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:734989704843:android:b99e39b19cd99260df7e8e",
+        "android_client_info": {
+          "package_name": "com.example.incivismenavigation"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "734989704843-91sel9nr9qsf71smmh74r95ft19ktb45.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDB4vByo92W3kyeG6rT_ucIB0pOx61iCrM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "734989704843-91sel9nr9qsf71smmh74r95ft19ktb45.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

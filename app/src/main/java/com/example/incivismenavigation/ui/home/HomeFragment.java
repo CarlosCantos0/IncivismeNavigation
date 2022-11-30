@@ -80,7 +80,7 @@ public class HomeFragment extends Fragment {
                     } else if (coarseLocationGranted != null && coarseLocationGranted) {
                         getLocation();
                     } else {
-                        Toast.makeText(requireContext(), "No concedeixen permisos", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(requireContext(), "No coinciden los permisos", Toast.LENGTH_SHORT).show();
                     }
                 }
         );
@@ -93,7 +93,7 @@ public class HomeFragment extends Fragment {
             if (locationResult != null) {
                 fetchAddress(locationResult.getLastLocation());
             } else {
-                binding.textHome.setText("Sense localització coneguda");
+                binding.textHome.setText("Sin alguna localización concocida");
             }
         }
     };
@@ -117,10 +117,10 @@ public class HomeFragment extends Fragment {
             Toast.makeText(requireContext(), "getLocation: permissions granted", Toast.LENGTH_SHORT).show();
             mFusedLocationClient.requestLocationUpdates(getLocationRequest(), mLocationCallback, null);
         }
-        binding.textHome.setText("Carregant...");
+        binding.textHome.setText("Cargando...");
         binding.loading.setVisibility(ProgressBar.VISIBLE);
         mTrackingLocation = true;
-        binding.btnGetLocation.setText("Aturar el seguiment de la ubicació");
+        binding.btnGetLocation.setText("Pausar el seguimiento de la ubicación");
     }
 
     private LocationRequest getLocationRequest() {
@@ -135,7 +135,7 @@ public class HomeFragment extends Fragment {
         if (mTrackingLocation) {
             binding.loading.setVisibility(ProgressBar.INVISIBLE);
             mTrackingLocation = false;
-            binding.btnGetLocation.setText("Comença a seguir la ubicació");
+            binding.btnGetLocation.setText("Empieza a trazar tu ubicación.");
         }
     }
 
@@ -158,11 +158,11 @@ public class HomeFragment extends Fragment {
                         if (location != null) {
                             fetchAddress(location);
                         } else {
-                            binding.textHome.setText("Sense localització coneguda");
+                            binding.textHome.setText("Sin alguna localización concocida");
                         }
                     });
         }
-        binding.textHome.setText("Carregant...");
+        binding.textHome.setText("Cargando...");
     }
 
 
@@ -188,7 +188,7 @@ public class HomeFragment extends Fragment {
 
                 if (addresses == null || addresses.size() == 0) {
                     if (resultMessage.isEmpty()) {
-                        resultMessage = "No s'ha trobat cap adreça";
+                        resultMessage = "Sin alguna localización concocida";
                         Log.e("INCIVISME", resultMessage);
                     }
                 } else {
