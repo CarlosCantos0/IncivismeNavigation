@@ -26,4 +26,6 @@ public class SharedViewModel extends AndroidViewModel {
     public void setUser(FirebaseUser passedUser) {
         user.postValue(passedUser);
     }
+
+
 }
