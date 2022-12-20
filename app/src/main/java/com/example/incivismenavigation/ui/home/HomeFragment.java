@@ -31,6 +31,7 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.Priority;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -40,8 +41,47 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class HomeFragment extends Fragment {
-
     private FragmentHomeBinding binding;
+
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        HomeViewModel homeViewModel = new ViewModelProvider(this).get(HomeViewModel.class);
+
+        binding = FragmentHomeBinding.inflate(inflater, container, false);
+        View root = binding.getRoot();
+
+        SharedViewModel sharedViewModel = new ViewModelProvider(getActivity()).get(SharedViewModel.class);
+
+        sharedViewModel.getButtonText().observe(getViewLifecycleOwner(), s -> binding.btnGetLocation.setText(s));
+
+        SharedViewModel.getCurrentAddress().observe(getViewLifecycleOwner(), address -> {
+            binding.textHome.setText(String.format(
+                    "Direcció: %1$s \n Hora: %2$tr",
+                    address, System.currentTimeMillis()));
+        });
+
+        sharedViewModel.getProgressBar().observe(getViewLifecycleOwner(), visible -> {
+            if (visible)
+                binding.loading.setVisibility(ProgressBar.VISIBLE);
+            else
+                binding.loading.setVisibility(ProgressBar.INVISIBLE);
+        });
+
+        binding.btnGetLocation.setOnClickListener(view -> {
+            Log.d("DEBUG", "Clicked Get Location");
+            sharedViewModel.switchTrackingLocation();
+        });
+
+        return root;
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
+    }
+}
+
+   /* private FragmentHomeBinding binding;
     ActivityResultLauncher<String[]> locationPermissionRequest;
     private Location mLastLocation;
     private FusedLocationProviderClient mFusedLocationClient;
@@ -109,99 +149,6 @@ public class HomeFragment extends Fragment {
 
         return root;
 }
-    private void startTrackingLocation() {
-        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(requireContext(), "Request permisssions", Toast.LENGTH_SHORT).show();
-            locationPermissionRequest.launch(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION});
-        } else {
-            Toast.makeText(requireContext(), "getLocation: permissions granted", Toast.LENGTH_SHORT).show();
-            mFusedLocationClient.requestLocationUpdates(getLocationRequest(), mLocationCallback, null);
-        }
-        binding.textHome.setText("Cargando...");
-        binding.loading.setVisibility(ProgressBar.VISIBLE);
-        mTrackingLocation = true;
-        binding.btnGetLocation.setText("Pausar el seguimiento de la ubicación");
-    }
-
-    private LocationRequest getLocationRequest() {
-        LocationRequest locationRequest = new LocationRequest();
-        locationRequest.setInterval(10000);
-        locationRequest.setFastestInterval(5000);
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        return locationRequest;
-    }
-
-    private void stopTrackingLocation() {
-        if (mTrackingLocation) {
-            binding.loading.setVisibility(ProgressBar.INVISIBLE);
-            mTrackingLocation = false;
-            binding.btnGetLocation.setText("Empieza a trazar tu ubicación.");
-        }
-    }
-
-    private final String TAG = this.getClass().getSimpleName();
-
-    private void getLocation() {
-        if (ContextCompat.checkSelfPermission(getContext(),
-                Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
-
-            Toast.makeText(requireContext(), "Request permisssions", Toast.LENGTH_SHORT).show();
-            locationPermissionRequest.launch(new String[]{
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-            });
-        } else {
-            Toast.makeText(requireContext(), "getLocation: permissions granted", Toast.LENGTH_SHORT).show();
-            mFusedLocationClient.getLastLocation().addOnSuccessListener(
-                    location -> {
-                        if (location != null) {
-                            fetchAddress(location);
-                        } else {
-                            binding.textHome.setText("Sin alguna localización concocida");
-                        }
-                    });
-        }
-        binding.textHome.setText("Cargando...");
-    }
-
-
-    private void fetchAddress(Location location) {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        Handler handler = new Handler(Looper.getMainLooper());
-
-        Geocoder geocoder = new Geocoder(requireContext(),
-                Locale.getDefault());
-
-        executor.execute(() -> {
-            // Aquest codi s'executa en segon pla
-            List<Address> addresses = null;
-            String resultMessage = "";
-
-            try {
-                addresses = geocoder.getFromLocation(
-                        location.getLatitude(),
-                        location.getLongitude(),
-                        // En aquest cas, sols volem una única adreça:
-                        1);
-
-
-                if (addresses == null || addresses.size() == 0) {
-                    if (resultMessage.isEmpty()) {
-                        resultMessage = "Sin alguna localización concocida";
-                        Log.e("INCIVISME", resultMessage);
-                    }
-                } else {
-                    Address address = addresses.get(0);
-                    ArrayList<String> addressParts = new ArrayList<>();
-
-                    for (int i = 0; i <= address.getMaxAddressLineIndex(); i++) {
-                        addressParts.add(address.getAddressLine(i));
-                    }
-
-                    resultMessage = TextUtils.join("\n", addressParts);
-                    String finalResultMessage = resultMessage;
-                    handler.post(() -> {
                         // Aquest codi s'executa en primer pla.
                         binding.textHome.setText(String.format(
                                 "Direcció: %1$s \n Hora: %2$tr",
@@ -226,5 +173,5 @@ public class HomeFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
-    }
-}
+    }*/
+//}

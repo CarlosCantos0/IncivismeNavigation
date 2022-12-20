@@ -4,7 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
-import com.example.incivismenavigation.model.SharedViewModel;
+import com.example.incivismenavigation.ui.home.SharedViewModel;
 import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract;
 import com.firebase.ui.auth.IdpResponse;
@@ -59,8 +59,6 @@ public class MainActivity<signInIntent> extends AppCompatActivity {
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(binding.navView, navController);
 
-        sharedViewModel = new ViewModelProvider(this).get(SharedViewModel.class);
-
         signInLauncher = registerForActivityResult(
                 new FirebaseAuthUIActivityResultContract(),
                 (result) -> {
@@ -74,6 +72,8 @@ public class MainActivity<signInIntent> extends AppCompatActivity {
                 new AuthUI.IdpConfig.EmailBuilder().build(),
                 new AuthUI.IdpConfig.GoogleBuilder().build());
 
+
+
         // Create and launch sign-in intent
         Intent signInIntent = AuthUI.getInstance()
                 .createSignInIntentBuilder()
@@ -81,6 +81,8 @@ public class MainActivity<signInIntent> extends AppCompatActivity {
                 .build();
         signInLauncher.launch(signInIntent);
 
+
+        sharedViewModel = new ViewModelProvider(this).get(SharedViewModel.class);
         }
 
     @Override
