@@ -64,7 +64,7 @@ public class MainActivity<signInIntent> extends AppCompatActivity {
                 (result) -> {
                     if (result.getResultCode() == RESULT_OK) {
                         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                        sharedViewModel.setUser(user);
+                        sharedViewModel.getUserId();
                     }
                 });
 
@@ -105,7 +105,7 @@ public class MainActivity<signInIntent> extends AppCompatActivity {
                             .build();
             signInLauncher.launch(signInIntent);
         } else {
-            sharedViewModel.setUser(auth.getCurrentUser());
+            sharedViewModel.getUserId();
         }
     }
 

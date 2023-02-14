@@ -1,16 +1,18 @@
 package com.example.incivismenavigation.ui.home;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Application;
+import android.content.Context;
+import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
-import android.os.Handler;
 import android.os.Looper;
-import android.text.TextUtils;
-import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -19,36 +21,38 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class SharedViewModel extends AndroidViewModel {
-    private final Application app;
-    private static final MutableLiveData<String> currentAddress = new MutableLiveData<>();
+    private final MutableLiveData<String> currentAddress = new MutableLiveData<>();
     private final MutableLiveData<String> checkPermission = new MutableLiveData<>();
     private final MutableLiveData<String> buttonText = new MutableLiveData<>();
     private final MutableLiveData<Boolean> progressBar = new MutableLiveData<>();
 
+    private OnPermissionRequestCallback permissionRequestCallback;
+
+    @SuppressLint("StaticFieldLeak")
+    private final Context mContext;
+    private boolean mPermissionGranted = false;
+
     private boolean mTrackingLocation;
-    FusedLocationProviderClient mFusedLocationClient;
+    private FusedLocationProviderClient mFusedLocationClient;
 
     public SharedViewModel(@NonNull Application application) {
         super(application);
-
-        this.app = application;
+        mContext = application.getApplicationContext();
     }
 
     void setFusedLocationClient(FusedLocationProviderClient mFusedLocationClient) {
         this.mFusedLocationClient = mFusedLocationClient;
     }
 
-    public static LiveData<String> getCurrentAddress() {
+    public LiveData<String> getCurrentAddress() {
         return currentAddress;
     }
 
@@ -82,30 +86,34 @@ public class SharedViewModel extends AndroidViewModel {
     }
 
     public void switchTrackingLocation() {
-        if (!mTrackingLocation) {
-            startTrackingLocation(true);
+        if (mPermissionGranted) {
+            if (!mTrackingLocation) {
+                startTrackingLocation();
+            } else {
+                stopTrackingLocation();
+            }
         } else {
-            stopTrackingLocation();
+            requestLocationPermission();
         }
-
     }
 
-    @SuppressLint("MissingPermission")
-    void startTrackingLocation(boolean needsChecking) {
-        if (needsChecking) {
-            checkPermission.postValue("check");
+    /*private void requestLocationPermission() {
+        if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            mPermissionGranted = true;
+            startTrackingLocation();
         } else {
-            mFusedLocationClient.requestLocationUpdates(
-                    getLocationRequest(),
-                    mLocationCallback, null
-            );
-
-            currentAddress.postValue("Carregant...");
-
-            progressBar.postValue(true);
-            mTrackingLocation = true;
-            buttonText.setValue("Aturar el seguiment de la ubicació");
+            ActivityCompat.requestPermissions((Activity) app, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
         }
+    }*/
+
+    @SuppressLint("MissingPermission")
+    private void startTrackingLocation() {
+        mFusedLocationClient.requestLocationUpdates(getLocationRequest(), mLocationCallback, Looper.getMainLooper());
+
+        currentAddress.postValue("Carregant...");
+        progressBar.postValue(true);
+        mTrackingLocation = true;
+        buttonText.setValue("Aturar el seguiment de la ubicació");
     }
 
 
@@ -118,55 +126,60 @@ public class SharedViewModel extends AndroidViewModel {
         }
     }
 
+
     private void fetchAddress(Location location) {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        Handler handler = new Handler(Looper.getMainLooper());
+        Geocoder geocoder = new Geocoder(mContext, Locale.getDefault());
+        List<Address> addresses = null;
+        try {
+            addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-        Geocoder geocoder = new Geocoder(app.getApplicationContext(), Locale.getDefault());
-
-        executor.execute(() -> {
-            // Aquest codi s'executa en segon pla
-            List<Address> addresses = null;
-            String resultMessage = "";
-
-            try {
-                addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(),
-                        // En aquest cas, sols volem una única adreça:
-                        1);
-
-
-                if (addresses == null || addresses.size() == 0) {
-                    if (resultMessage.isEmpty()) {
-                        resultMessage = "No s'ha trobat cap adreça";
-                        Log.e("INCIVISME", resultMessage);
-                    }
-                } else {
-                    Address address = addresses.get(0);
-                    ArrayList<String> addressParts = new ArrayList<>();
-
-                    for (int i = 0; i <= address.getMaxAddressLineIndex(); i++) {
-                        addressParts.add(address.getAddressLine(i));
-                    }
-
-                    resultMessage = TextUtils.join("\n", addressParts);
-                    String finalResultMessage = resultMessage;
-                    handler.post(() -> {
-                        // Aquest codi s'executa en primer pla.
-                        if (mTrackingLocation)
-                            currentAddress.postValue(String.format("Direcció: %1$s \n Hora: %2$tr", finalResultMessage, System.currentTimeMillis()));
-                    });
-                }
-
-            } catch (IOException ioException) {
-                resultMessage = "Servei no disponible";
-                Log.e("INCIVISME", resultMessage, ioException);
-            } catch (IllegalArgumentException illegalArgumentException) {
-                resultMessage = "Coordenades no vàlides";
-                Log.e("INCIVISME", resultMessage + ". " + "Latitude = " + location.getLatitude() + ", Longitude = " + location.getLongitude(), illegalArgumentException);
+        if (addresses != null && addresses.size() > 0) {
+            Address address = addresses.get(0);
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < address.getMaxAddressLineIndex(); i++) {
+                sb.append(address.getAddressLine(i));
+                sb.append("\n");
             }
-        });
+            currentAddress.postValue(sb.toString());
+        } else {
+            currentAddress.postValue("No es pot obtenir la ubicació actual");
+        }
     }
 
-    public void setUser(FirebaseUser user) {
+    public String getUserId() {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            return user.getUid();
+        }
+        return null;
     }
+
+    public void setPermissionRequestCallback(OnPermissionRequestCallback permissionRequestCallback) {
+        this.permissionRequestCallback = permissionRequestCallback;
+    }
+    private void requestLocationPermission() {
+        if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            mPermissionGranted = true;
+            startTrackingLocation();
+        } else {
+            if (permissionRequestCallback != null) {
+                permissionRequestCallback.requestPermission(Manifest.permission.ACCESS_FINE_LOCATION);
+            }
+        }
+    }
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == 1) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                mPermissionGranted = true;
+                startTrackingLocation();
+            } else {
+                Toast.makeText(mContext, "Permiso de ubicación denegado", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+
 }
