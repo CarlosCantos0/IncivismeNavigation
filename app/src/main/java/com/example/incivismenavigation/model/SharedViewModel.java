@@ -6,6 +6,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.google.android.gms.maps.model.LatLng;
@@ -16,6 +17,7 @@ public class SharedViewModel extends AndroidViewModel {
 
     private MutableLiveData<FirebaseUser> user = new MutableLiveData<>();
     private final MutableLiveData<LatLng> currentLatLng = new MutableLiveData<>();
+    private MutableLiveData<FirebaseUser> userLiveData;
 
     public SharedViewModel(@NonNull Application application) {
         super(application);
@@ -34,10 +36,17 @@ public class SharedViewModel extends AndroidViewModel {
         }
     }
 
-    public FirebaseUser getUser() {
-        FirebaseUser auth = FirebaseAuth.getInstance().getCurrentUser();
-
-        return auth;
+    public LiveData<FirebaseUser> getUser() {
+        if (userLiveData == null) {
+            userLiveData = new MutableLiveData<>();
+            FirebaseAuth.getInstance().addAuthStateListener(new FirebaseAuth.AuthStateListener() {
+                @Override
+                public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                    userLiveData.setValue(firebaseAuth.getCurrentUser());
+                }
+            });
+        }
+        return userLiveData;
     }
 
     public void setUser(FirebaseUser passedUser) {

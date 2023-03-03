@@ -16,8 +16,6 @@ import com.example.incivismenavigation.databinding.ActivityMainBinding;
 import com.example.incivismenavigation.model.SharedViewModel;
 import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract;
-import com.firebase.ui.auth.IdpResponse;
-import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -29,6 +27,7 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
     private SharedViewModel sharedViewModel;
     private ActivityResultLauncher<Intent> signInLauncher;
+    private FirebaseUser user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,25 +59,6 @@ public class MainActivity extends AppCompatActivity {
                 });
 
         startFirebaseSignInActivity();
-
-        /*binding.btnGetLocation.setOnClickListener(button -> {
-            Incidencia incidencia = new Incidencia();
-            incidencia.setDireccio(binding.textHome.getText().toString());
-            incidencia.setLatitud(binding.txtLatitud.getText().toString());
-            incidencia.setLongitud(binding.txtLongitud.getText().toString());
-            incidencia.setProblema(binding.txtDescripcio.getText().toString());
-
-            DatabaseReference base = FirebaseDatabase.getInstance(
-            ).getReference();
-
-            DatabaseReference users = base.child("users");
-            DatabaseReference uid = users.child(authUser.getUid());
-            DatabaseReference incidencies = uid.child("incidencies");
-
-            DatabaseReference reference = incidencies.push();
-            reference.setValue(incidencia);
-        }); */
-
     }
 
     public void startFirebaseSignInActivity() {
@@ -96,19 +76,19 @@ public class MainActivity extends AppCompatActivity {
                             )
                             .build();
             signInLauncher.launch(signInIntent);
-            Log.e("XXXX", String.valueOf(auth.getCurrentUser()));
+            Log.e("Se ha logueado correcto", String.valueOf(auth.getCurrentUser()));
 
         } else {
             sharedViewModel.setUser(auth.getCurrentUser());
-            Log.e("XXXX", String.valueOf(auth.getCurrentUser()));
+            Log.e("ya estaba logueado", String.valueOf(auth.getCurrentUser()));
         }
     }
 
-    private void onSignInResult(FirebaseAuthUIAuthenticationResult result) {
+    /*private void onSignInResult(FirebaseAuthUIAuthenticationResult result) {
         IdpResponse response = result.getIdpResponse();
         if (result.getResultCode() == RESULT_OK) {
             // Successfully signed in
-            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            user = FirebaseAuth.getInstance().getCurrentUser();
             // ...
         } else {
             // Sign in failed. If response is null the user canceled the
@@ -116,5 +96,5 @@ public class MainActivity extends AppCompatActivity {
             // response.getError().getErrorCode() and handle the error.
             // ...
         }
-    }
+    }*/
 }

@@ -23,6 +23,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.incivismenavigation.Incidencia;
@@ -34,6 +35,7 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -54,7 +56,10 @@ public class HomeFragment extends Fragment {
     private LocationCallback mLocationCallback;
     private boolean mTrackingLocation;
 
-    private FirebaseUser authUser;
+
+    private LiveData<FirebaseUser> user1;
+    private FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
+    private FirebaseUser authUser = firebaseAuth.getCurrentUser();
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -68,6 +73,8 @@ public class HomeFragment extends Fragment {
         final TextView textView = binding.textHome;
         homeViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
 
+        SharedViewModel sharedViewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
+        user1 = sharedViewModel.getUser();
 
 
         locationPermissionRequest = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
@@ -82,15 +89,6 @@ public class HomeFragment extends Fragment {
             }
         });
 
-        startTrackingLocation();
-        binding.btnGetLocation.setOnClickListener((View clickedView) -> {
-            if (!mTrackingLocation) {
-                startTrackingLocation();
-            } else {
-                stopTrackingLocation();
-            }
-        });
-
         mLocationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
@@ -102,9 +100,16 @@ public class HomeFragment extends Fragment {
             }
         };
 
-        SharedViewModel sharedViewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
-        authUser = sharedViewModel.getUser();
+        authUser = firebaseAuth.getCurrentUser();
 
+        startTrackingLocation();
+        binding.btnGetLocation.setOnClickListener((View clickedView) -> {
+            if (!mTrackingLocation) {
+                startTrackingLocation();
+            } else {
+                stopTrackingLocation();
+            }
+        });
 
         binding.btnGetLocation.setOnClickListener(button -> {
             Incidencia incidencia = new Incidencia();
