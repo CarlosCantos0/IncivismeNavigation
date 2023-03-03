@@ -4,14 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
-import com.example.incivismenavigation.model.SharedViewModel;
-import com.firebase.ui.auth.AuthUI;
-import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract;
-import com.firebase.ui.auth.IdpResponse;
-import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
-
-import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
@@ -21,16 +13,22 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import com.example.incivismenavigation.databinding.ActivityMainBinding;
+import com.example.incivismenavigation.model.SharedViewModel;
+import com.firebase.ui.auth.AuthUI;
+import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract;
+import com.firebase.ui.auth.IdpResponse;
+import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.util.Arrays;
-import java.util.List;
 
-public class MainActivity<signInIntent> extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
     private SharedViewModel sharedViewModel;
+    private ActivityResultLauncher<Intent> signInLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,7 +47,8 @@ public class MainActivity<signInIntent> extends AppCompatActivity {
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(binding.navView, navController);
 
-        sharedViewModel = new ViewModelProvider(this).get(SharedViewModel.class);
+        sharedViewModel = new ViewModelProvider(this, (ViewModelProvider.Factory) new ViewModelProvider.AndroidViewModelFactory(getApplication())).get(SharedViewModel.class);
+
 
         signInLauncher = registerForActivityResult(
                 new FirebaseAuthUIActivityResultContract(),
@@ -60,29 +59,50 @@ public class MainActivity<signInIntent> extends AppCompatActivity {
                     }
                 });
 
+        startFirebaseSignInActivity();
+
+        /*binding.btnGetLocation.setOnClickListener(button -> {
+            Incidencia incidencia = new Incidencia();
+            incidencia.setDireccio(binding.textHome.getText().toString());
+            incidencia.setLatitud(binding.txtLatitud.getText().toString());
+            incidencia.setLongitud(binding.txtLongitud.getText().toString());
+            incidencia.setProblema(binding.txtDescripcio.getText().toString());
+
+            DatabaseReference base = FirebaseDatabase.getInstance(
+            ).getReference();
+
+            DatabaseReference users = base.child("users");
+            DatabaseReference uid = users.child(authUser.getUid());
+            DatabaseReference incidencies = uid.child("incidencies");
+
+            DatabaseReference reference = incidencies.push();
+            reference.setValue(incidencia);
+        }); */
 
     }
 
-    private ActivityResultLauncher<Intent> signInLauncher = registerForActivityResult(
-            new FirebaseAuthUIActivityResultContract(),
-            new ActivityResultCallback<FirebaseAuthUIAuthenticationResult>() {
-                @Override
-                public void onActivityResult(FirebaseAuthUIAuthenticationResult result) {
-                    onSignInResult(result);
-                }
-            }
-    );
+    public void startFirebaseSignInActivity() {
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        if (auth.getCurrentUser() == null) {
+            Intent signInIntent =
+                    AuthUI.getInstance()
+                            .createSignInIntentBuilder()
+                            .setIsSmartLockEnabled(false)
+                            .setAvailableProviders(
+                                    Arrays.asList(
+                                            new AuthUI.IdpConfig.EmailBuilder().build(),
+                                            new AuthUI.IdpConfig.GoogleBuilder().build()
+                                    )
+                            )
+                            .build();
+            signInLauncher.launch(signInIntent);
+            Log.e("XXXX", String.valueOf(auth.getCurrentUser()));
 
-    List<AuthUI.IdpConfig> providers = Arrays.asList(
-            new AuthUI.IdpConfig.EmailBuilder().build(),
-            new AuthUI.IdpConfig.GoogleBuilder().build());
-
-    // Create and launch sign-in intent
-    Intent signInIntent = AuthUI.getInstance()
-            .createSignInIntentBuilder()
-            .setAvailableProviders(providers)
-            .build();
-    signInLauncher.launch(signInIntent);
+        } else {
+            sharedViewModel.setUser(auth.getCurrentUser());
+            Log.e("XXXX", String.valueOf(auth.getCurrentUser()));
+        }
+    }
 
     private void onSignInResult(FirebaseAuthUIAuthenticationResult result) {
         IdpResponse response = result.getIdpResponse();
@@ -97,30 +117,4 @@ public class MainActivity<signInIntent> extends AppCompatActivity {
             // ...
         }
     }
-
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-        FirebaseAuth auth = FirebaseAuth.getInstance();
-        Log.e("XXXX", String.valueOf(auth.getCurrentUser()));
-        if (auth.getCurrentUser() == null) {
-            Intent signInIntent =
-                    AuthUI.getInstance()
-                            .createSignInIntentBuilder()
-                            .setIsSmartLockEnabled(false)
-                            .setAvailableProviders(
-                                    Arrays.asList(
-                                            new AuthUI.IdpConfig.EmailBuilder().build(),
-                                            new AuthUI.IdpConfig.GoogleBuilder().build()
-                                    )
-                            )
-                            .build();
-            signInLauncher.launch(signInIntent);
-        } else {
-            sharedViewModel.setUser(auth.getCurrentUser());
-        }
-    }
-
 }

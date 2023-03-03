@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "734989704843",
+    "firebase_url": "https://incivismenavigation-83c85-default-rtdb.europe-west1.firebasedatabase.app",
     "project_id": "incivismenavigation-83c85",
     "storage_bucket": "incivismenavigation-83c85.appspot.com"
   },
@@ -13,6 +14,14 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "734989704843-lef1cisd8f3slm7eq82bje7krbgcj5jc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.incivismenavigation",
+            "certificate_hash": "362079bc91d48c34449e0793950fbf3e6ea722c6"
+          }
+        },
         {
           "client_id": "734989704843-91sel9nr9qsf71smmh74r95ft19ktb45.apps.googleusercontent.com",
           "client_type": 3
