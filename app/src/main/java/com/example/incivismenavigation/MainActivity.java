@@ -83,18 +83,4 @@ public class MainActivity extends AppCompatActivity {
             Log.e("ya estaba logueado", String.valueOf(auth.getCurrentUser()));
         }
     }
-
-    /*private void onSignInResult(FirebaseAuthUIAuthenticationResult result) {
-        IdpResponse response = result.getIdpResponse();
-        if (result.getResultCode() == RESULT_OK) {
-            // Successfully signed in
-            user = FirebaseAuth.getInstance().getCurrentUser();
-            // ...
-        } else {
-            // Sign in failed. If response is null the user canceled the
-            // sign-in flow using the back button. Otherwise check
-            // response.getError().getErrorCode() and handle the error.
-            // ...
-        }
-    }*/
 }
